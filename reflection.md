@@ -1,17 +1,25 @@
 # PawPal+ Project Reflection
 
 ## 1. System Design
+- add a pet
+- add a task
+- see today's tasks
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+My initial UML design included four classes: `Owner`, `Pet`, `Task`, and `Schedule`.
+
+- **Owner** — represents the person using the app. It stores the owner's name and holds a list of their pets. It connects a person to both their pets and their schedule.
+- **Pet** — represents an individual animal. It stores the pet's name and species (`animal_type`).
+- **Task** — represents a single care activity (e.g., a walk or feeding). It stores the task type, which pet it belongs to, which day it falls on, how long it takes (`duration_minutes`), and its priority level. It also has an `edit()` method to update individual fields after creation.
+- **Schedule** — the core organizing class. It holds a date, the list of tasks to consider, the owner's available time windows (`time_availabilities`), and priority weights. Its methods allow tasks and availability to be added incrementally, and `generate_plan()` produces the final ordered list of tasks that fit within the owner's constraints.
+
 
 **b. Design changes**
 
-- Did your design change during implementation?
+- Did your design change during implementation? yes
 - If yes, describe at least one change and why you made it.
-
+    Task.edit field parameter renamed: field shadowed dataclasses.field and could cause a runtime error 
 ---
 
 ## 2. Scheduling Logic and Tradeoffs

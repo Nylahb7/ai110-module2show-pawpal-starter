@@ -53,6 +53,8 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 #   09:00 — Feeding (10 min) [priority: high]
 #   ...
 ```
+Today's Schedule (2026-07-06):
+  - [Mochi] Morning walk (20 min, high)
 
 ## 🧪 Testing PawPal+
 
@@ -76,10 +78,10 @@ Sample test output:
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | `Scheduler.sort_by_time()` | Sorts every task across all pets ascending by its `time` (date) attribute |
+| Filtering | `Scheduler.filter_tasks()` | Filters tasks by pet name and completion status (`completed` True/False) |
+| Conflict handling | `Scheduler.find_conflicts()`, `Scheduler.add_task_safe()` | `find_conflicts()` detects any overlapping tasks on a date (same or different pet); `add_task_safe()` blocks same-pet overlaps and warns (instead of raising) on different-pet overlaps |
+| Recurring tasks | `Task.mark_complete()`, `Scheduler.complete_task()` | Completing a `"daily"`/`"weekly"` task spins off and schedules its next occurrence automatically |
 
 ## 📸 Demo Walkthrough
 
