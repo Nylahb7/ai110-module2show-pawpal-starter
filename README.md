@@ -78,6 +78,11 @@ collected 16 items
 tests\test_pawpal.py ................                                         [100%]
 
 ================================ 16 passed in 0.04s ================================
+
+The suite's 16 tests exercise recurring-task completion, conflict detection, sort/filter consistency, and priority-driven plan generation — targeting edge cases like boundary-adjacent time slots, cross-pet vs. same-pet conflicts, and duplicate pet names that the original two tests didn't cover.
+
+**Confidence Level**
+5 stars
 ```
 
 ## 📐 Smarter Scheduling
@@ -93,12 +98,53 @@ tests\test_pawpal.py ................                                         [1
 
 ## 📸 Demo Walkthrough
 
-Describe your app in numbered steps so a reader can follow along without watching a video:
+### UI features
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+The Streamlit app (`app.py`) lets a user:
+
+- Enter an owner name, pet name, and species to create the owner/pet in session state
+- Add a task with a title, start time, duration, and priority (low/medium/high)
+- View that pet's tasks in a table, always sorted by date/time
+- Filter the task list to All / Completed / Incomplete
+- Check today's tasks for scheduling conflicts (overlapping times, same or different pet)
+- Set an available time window and generate a prioritized daily plan, seeing which tasks were scheduled and which didn't fit
+
+### Example workflow
+
+1. Enter owner "Jordan" and pet "Mochi" (a dog).
+2. Add a task — "Morning walk", 08:00, 20 minutes, high priority. It's added and shown in the task table.
+3. Add a second task for the same time slot, e.g. "Vet checkup" at 08:00 — `add_task_safe` detects the overlap and returns a warning instead of silently double-booking Mochi.
+4. Switch the filter to "Incomplete" to confirm both tasks show up, then mark one complete to see it move under "Completed".
+5. Set an available window (e.g. 08:00–10:00) and click "Generate schedule" — the scheduler sorts tasks by priority and fits as many as possible into the window, reporting any that didn't fit.
+
+### Key Scheduler behaviors shown
+
+- **Sorting** — `get_tasks_for_pet` / `sort_by_time` always return tasks ordered by date and start time, regardless of the order they were entered.
+- **Conflict warnings** — `find_conflicts` flags any overlapping tasks on a given date; `add_task_safe` blocks a same-pet overlap outright and warns (but still adds) a different-pet overlap.
+- **Priority-driven planning** — `generate_plan_for_date` orders tasks by priority weight and best-fits them into the day's available time slots.
+
+### Sample CLI output (`main.py`)
+
+```
+Today's Schedule (2026-07-06):
+  - [Mochi] Morning walk (20 min, high)
+
+All tasks sorted by time:
+  - 2026-07-06 [Mochi] Morning walk
+  - 2026-07-07 [Luna] Feed dinner
+  - 2026-07-08 [Mochi] Vet checkup
+
+Mochi's completed tasks:
+  - 2026-07-06 Morning walk
+
+Mochi's incomplete tasks:
+  - 2026-07-08 Vet checkup
+
+Attempting to add a conflicting task:
+  Warning: 'Groom Luna' for Luna overlaps with 'Vet checkup' for Mochi on 2026-07-08.
+
+Conflicts detected on 2026-07-08:
+  - 'Vet checkup' overlaps with 'Groom Luna'
+```
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->

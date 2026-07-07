@@ -76,7 +76,7 @@ with col4:
 
 if st.button("Add task"):
     try:
-        owner.add_task(Task(
+        warning = scheduler.add_task_safe(Task(
             description=task_title,
             pet=pet,
             time=TODAY,
@@ -84,22 +84,67 @@ if st.button("Add task"):
             priority=priority,
             start_time=task_start.strftime("%H:%M"),
         ))
+        if warning:
+            st.warning(warning)
+        else:
+            st.success(f"Added '{task_title}' for {pet.name}.")
     except ValueError as e:
         st.error(str(e))
 
-if pet.tasks:
-    st.write("Current tasks:")
-    st.table([
+
+def _task_rows(tasks):
+    priority_icons = {"high": "🔴 high", "medium": "🟡 medium", "low": "🟢 low"}
+    return [
         {
             "description": t.description,
+            "start_time": t.start_time,
             "duration_minutes": t.duration_minutes,
-            "priority": t.priority,
-            "completed": t.completed,
+            "priority": priority_icons.get(t.priority, t.priority),
+            "completed": "✅" if t.completed else "⬜",
         }
-        for t in pet.tasks
-    ])
+        for t in tasks
+    ]
+
+
+pet_tasks = scheduler.get_tasks_for_pet(pet)
+st.write("Current tasks (sorted by date/time):")
+if pet_tasks:
+    st.table(_task_rows(pet_tasks))
 else:
     st.info("No tasks yet. Add one above.")
+
+st.divider()
+
+st.subheader("Filter Tasks")
+st.caption("Filter this pet's tasks by completion status using `scheduler.filter_tasks`.")
+
+status_choice = st.radio("Status", ["All", "Completed", "Incomplete"], horizontal=True)
+
+if status_choice == "All":
+    filtered_tasks = pet_tasks
+else:
+    filtered_tasks = scheduler.filter_tasks(pet.name, completed=(status_choice == "Completed"))
+
+if filtered_tasks:
+    st.success(f"{len(filtered_tasks)} task(s) match '{status_choice}'.")
+    st.table(_task_rows(filtered_tasks))
+else:
+    st.info(f"No tasks match '{status_choice}'.")
+
+st.divider()
+
+st.subheader("Conflict Check")
+st.caption(f"Check {TODAY} for overlapping tasks using `scheduler.find_conflicts`.")
+
+conflicts = scheduler.find_conflicts(TODAY)
+if conflicts:
+    for a, b in conflicts:
+        st.warning(
+            f"'{a.description}' ({a.pet.name}, {a.start_time}) overlaps with "
+            f"'{b.description}' ({b.pet.name}, {b.start_time})."
+        )
+else:
+    st.success("No conflicts detected for today.")
 
 st.divider()
 
@@ -120,10 +165,14 @@ if st.button("Generate schedule"):
 
     plan = scheduler.generate_plan_for_date(TODAY)
     if plan:
-        st.write(f"Plan for {TODAY}:")
-        st.table([
-            {"description": t.description, "duration_minutes": t.duration_minutes, "priority": t.priority}
-            for t in plan
-        ])
+        st.success(f"Scheduled {len(plan)} of {len(pet_tasks)} task(s) for {TODAY}.")
+        st.table(_task_rows(plan))
+
+        scheduled_ids = {id(t) for t in plan}
+        skipped = [t for t in pet_tasks if id(t) not in scheduled_ids]
+        if skipped:
+            st.warning(
+                "Didn't fit in the available window: " + ", ".join(t.description for t in skipped)
+            )
     else:
         st.info("No tasks fit in the available time window.")
